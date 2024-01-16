@@ -1,0 +1,88 @@
+services:
+  # Self-hosted git server
+  gitea:
+    image: docker.io/gitea/gitea:latest
+    container_name: gitea
+    depends_on:
+      - gitea_db
+    environment:
+      - USER_UID=${PUID}
+      - USER_GID=${PGID}
+      - TZ=${TIMEZONE}
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=gitea_db:5432
+      - GITEA__database__NAME=gitea_db
+      - GITEA__database__USER=${GITEA_USER}
+      - GITEA__database__PASSWD=${GITEA_PASSWORD}
+    volumes:
+      - ${CONFIG_DIR}/gitea:/data:Z
+      # - /etc/timezone:/etc/timezone:ro
+      # - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "${GITEA_PORT_1}:3000"
+      - "${GITEA_PORT_2}:22"
+    restart: unless-stopped
+    # privileged: true
+
+  gitea_db:
+    image: postgres:14
+    container_name: gitea_db
+    environment:
+      - POSTGRES_DB=gitea_db
+      - POSTGRES_USER=${GITEA_USER}
+      - POSTGRES_PASSWORD=${GITEA_PASSWORD}
+    volumes:
+      - ${CONFIG_DIR}/gitea_db:/var/lib/postgresql/data:Z
+    restart: unless-stopped
+    # privileged: true
+
+  # Open source reverse proxy server
+  nginx:
+    image: docker.io/library/nginx
+    container_name: nginx
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes: 
+      - ${WEB_DIR}:/usr/share/nginx/html:Z
+    restart: unless-stopped
+    ports:
+      - "${NGINX_WEB_PORT}:80"
+
+  # DNS proxy manager
+  nginx_proxy:
+    image: docker.io/jc21/nginx-proxy-manager:latest
+    container_name: nginx_proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:Z
+      - ${CONFIG_DIR}/nginx/data:/data:Z
+      - ${CONFIG_DIR}/nginx/letsencrypt:/etc/letsencrypt:Z
+    ports:
+      - "${NGINX_PORT_1}:80"
+      - "${NGINX_PORT_2}:81"
+      - "${NGINX_PORT_3}:443"
+    restart: unless-stopped
+    # privileged: true
+
+  # Container manager
+  portainer:
+    image: docker.io/portainer/portainer-ce:latest
+    container_name: portainer
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:Z
+      - ${CONFIG_DIR}/portainer:/data:Z
+    ports:
+      - "${PORTAINER_PORT}:9000"
+    restart: unless-stopped
+    # privileged: true
+
+  # Watchtower upgrades services (containerized apps) automatically
+  watchtower:
+    image: docker.io/containrrr/watchtower:latest
+    container_name: watchtower
+    command: --debug --cleanup --schedule "0 30 4 * * *"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:Z
+    restart: unless-stopped
+    # privileged: true
