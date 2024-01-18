@@ -75,16 +75,6 @@ services:
     restart: unless-stopped
     # privileged: true
 
-  # Container manager
-  portainer:
-    image: docker.io/portainer/portainer-ce:latest
-    container_name: portainer
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:Z
-      - ${CONFIG_DIR}/portainer:/data:Z
-    ports:
-      - "${PORTAINER_PORT}:9000"
-    restart: unless-stopped
   # Pi-hole Ad Blocker
   pihole:
     image: pihole/pihole:latest
@@ -110,6 +100,16 @@ services:
       - NET_ADMIN
     restart: unless-stopped
 
+  # Container manager
+  portainer:
+    image: docker.io/portainer/portainer-ce:latest
+    container_name: portainer
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:Z
+      - ${CONFIG_DIR}/portainer:/data:Z
+    ports:
+      - "${PORTAINER_PORT}:9000"
+    restart: unless-stopped
     # privileged: true
 
   # # Game-streaming service
