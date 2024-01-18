@@ -55,6 +55,29 @@ usermod -aG docker $USER
 systemctl enable docker.service
 systemctl start docker.service
 
+# Docker-Compose Setup
+cp docker-compose.yml ~/docker/docker-compose.yml
+cp .env ~/docker/.env
+cd ~/docker
+docker-compose up -d
+
+####################################
+### Stable Diffusion Setup
+####################################
+
+# Cloning the dockerized Stable Diffusion WebUI
+git clone https://github.com/AbdBarho/stable-diffusion-webui-docker.git
+cd stable-diffusion-webui-docker
+
+# Adding restart policy to the Automatic1111 service
+awk '
+/auto: &automatic/ { print; print "    restart: unless-stopped"; next }
+1' docker-compose.yml > tmpfile && mv tmpfile docker-compose.yml
+
+# Download and deploy
+docker compose --profile download up --build -d
+docker compose --profile auto up --build -d
+
 ####################################
 ### Wrap-up
 ####################################
