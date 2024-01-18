@@ -112,6 +112,24 @@ services:
 
     # privileged: true
 
+  # # Game-streaming service
+  # sunshine:
+  #   image: lizardbyte/sunshine:latest-debian-bookworm
+  #   container_name: sunshine
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ${CONFIG_DIR}/sunshine/config:/config:Z
+  #     - ${CONFIG_DIR}/sunshine/.config:/home/lizard/.config:Z
+  #     # - ${CONFIG_DIR}/sunshine/usr_share:/usr/share/sunshine:Z
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #   ports:
+  #     - "47984-47990:47984-47990/tcp"
+  #     - "48010:48010"
+  #     - "47998-48000:47998-48000/udp"
+
   # Watchtower upgrades services (containerized apps) automatically
   watchtower:
     image: docker.io/containrrr/watchtower:latest
