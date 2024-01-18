@@ -85,6 +85,31 @@ services:
     ports:
       - "${PORTAINER_PORT}:9000"
     restart: unless-stopped
+  # Pi-hole Ad Blocker
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    hostname: pihole
+    networks:
+      adblock:
+        ipv4_address: 192.168.178.99
+    environment:
+      ServerIP: 192.168.178.99
+      WEBPASSWORD: '${PIHOLE_PASSWORD}'
+      TZ: '${TIMEZONE}'
+    volumes:
+      - ${CONFIG_DIR}/pihole/etc-pihole:/etc/pihole:Z
+      - ${CONFIG_DIR}/pihole/etc-dnsmasq.d:/etc/dnsmasq.d:Z
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "67:67/udp"
+      - "80:80/tcp"
+      - "443:443/tcp"
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+
     # privileged: true
 
   # Watchtower upgrades services (containerized apps) automatically
