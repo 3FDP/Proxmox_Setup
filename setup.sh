@@ -89,6 +89,47 @@ docker compose --profile download up --build -d
 docker compose --profile auto up --build -d
 
 ####################################
+### Windows VM Requirements
+####################################
+
+# Identifying NVIDIA GPU and associated devices
+echo "Identifying NVIDIA GPU and associated devices..."
+GPU_IDS=$(lspci -nn | grep -i nvidia | awk '{print $(NF-2)}' | tr -d '[]')
+
+# if [ -z "$GPU_IDS" ]; then
+#     echo "No NVIDIA GPU found..."
+# fi
+
+# Creating VFIO configurations
+echo "Configuring VFIO..."
+echo 'vfio-pci' > /etc/modules-load.d/vfio-pci.conf
+
+# Building VFIO options string
+VFIO_OPTIONS="options vfio-pci ids="
+SEP=""
+for ID in $GPU_IDS; do
+    VFIO_OPTIONS+="${SEP}${ID}"
+    SEP=","
+done
+echo $VFIO_OPTIONS > /etc/modprobe.d/vfio.conf
+
+# Detect CPU type and set appropriate IOMMU option
+CPU_TYPE=$(grep -m 1 'model name' /proc/cpuinfo)
+if [[ $CPU_TYPE == *"Intel"* ]]; then
+    IOMMU_SETTING="intel_iommu=on"
+elif [[ $CPU_TYPE == *"AMD"* ]]; then
+    IOMMU_SETTING="amd_iommu=on"
+else
+    echo "Unsupported CPU type. Exiting..."
+    exit 1
+fi
+
+# Configuring GRUB
+echo "Configuring GRUB..."
+sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*/& $IOMMU_SETTING/" /etc/default/grub
+update-grub
+
+####################################
 ### Wrap-up
 ####################################
 
