@@ -13,6 +13,9 @@
 ### Software Setup
 ####################################
 
+# Load the .env file
+source .env
+
 # Update and upgrade
 apt update -y
 apt upgrade -y
@@ -66,9 +69,9 @@ systemctl enable docker.service
 systemctl start docker.service
 
 # Docker-Compose Setup
-cp docker-compose.yml ~/docker/docker-compose.yml
-cp .env ~/docker/.env
-cd ~/docker
+cp docker-compose.yml "$DOCKER_COMPOSE_FOLDER/docker-compose.yml"
+cp .env "$DOCKER_COMPOSE_FOLDER/.env"
+cd "$DOCKER_COMPOSE_FOLDER"
 docker-compose up -d
 
 ####################################
