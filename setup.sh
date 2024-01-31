@@ -24,26 +24,6 @@ apt upgrade -y
 apt install -y flatpak
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-# Nvidia drivers (if needed)
-if lspci | grep -i "nvidia" > /dev/null; then
-    echo "NVIDIA GPU detected. Installing drivers..."
-    echo "deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware" | tee -a /etc/apt/sources.list    apt install nvidia-driver firmware-misc-nonfree
-    apt update -y
-    apt install -y pve-headers build-essential nvidia-driver
-
-    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
-  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
-    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
-    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
-
-    sudo apt-get update
-    sudo apt-get install -y nvidia-container-toolkit
-    sudo nvidia-ctk runtime configure --runtime=docker
-    sudo systemctl restart docker
-else
-    echo "No NVIDIA GPU detected, moving on without its proprietary drivers..."
-fi
-
 # Terminal essentials
 apt install -y wget git neofetch
 
@@ -73,6 +53,30 @@ cp docker-compose.yml "$DOCKER_COMPOSE_FOLDER/docker-compose.yml"
 cp .env "$DOCKER_COMPOSE_FOLDER/.env"
 cd "$DOCKER_COMPOSE_FOLDER"
 docker-compose up -d
+
+####################################
+### NVIDIA Setup
+####################################
+
+# Nvidia drivers (if needed)
+if lspci | grep -i "nvidia" > /dev/null; then
+    echo "NVIDIA GPU detected. Installing drivers..."
+    echo "deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware" | tee -a /etc/apt/sources.list    apt install nvidia-driver firmware-misc-nonfree
+    apt update -y
+    apt install -y pve-headers build-essential nvidia-driver
+
+    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+    sudo apt-get update
+    sudo apt-get install -y nvidia-container-toolkit
+    sudo nvidia-ctk runtime configure --runtime=docker
+    sudo systemctl restart docker
+else
+    echo "No NVIDIA GPU detected, moving on without its proprietary drivers..."
+fi
 
 ####################################
 ### Stable Diffusion Setup
