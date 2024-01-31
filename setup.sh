@@ -41,7 +41,7 @@ if lspci | grep -i "nvidia" > /dev/null; then
     sudo nvidia-ctk runtime configure --runtime=docker
     sudo systemctl restart docker
 else
-    # echo "No NVIDIA GPU detected."
+    echo "No NVIDIA GPU detected, moving on without its proprietary drivers..."
 fi
 
 # Terminal essentials
